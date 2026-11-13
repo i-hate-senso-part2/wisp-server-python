@@ -114,7 +114,7 @@ def main():
   if args.limits:
     logging.info("enabled rate limits")
   if args.proxy:
-    logging.info(f"proxy enabled: {args.proxy}")
+    logging.info("proxy enabled")
   elif args.outbound_iface:
     logging.info(f"routing outbound traffic through the {args.outbound_iface} interface")
   logging.info(f"running on {platform.python_implementation()} {platform.python_version()}")
