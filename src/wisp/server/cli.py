@@ -107,7 +107,7 @@ def main():
   logging.info(f"running wisp-server-python v{wisp.version} (async)")
 
   if args.proxy and args.proxy == "warp" and has_pymasque == False:
-    raise ImportError("warp proxy was selected by pymasque is not installed. run 'pip install wisp-python[warp]' to install it")
+    raise ImportError("The 'warp' proxy requires pymasque. Install it with 'pip install wisp-python[warp]' or 'pip install .[warp]' from this source checkout.")
   if args.static:
     static_path = pathlib.Path(args.static).resolve()
     logging.info(f"serving static files from {static_path}")
