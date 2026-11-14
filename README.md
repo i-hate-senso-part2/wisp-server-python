@@ -58,6 +58,9 @@ options:
   --block-tcp           Block TCP streams.
 ```
 
+## Health Check:
+The server provides a small HTTP health-check endpoint at `/health`. It responds with status `200` and the text `OK`, so it can be used by cron services that have response-size limits. Configure the cron job to request `https://your-render-service.onrender.com/health`.
+
 ## Roadmap:
 - ~~Rate limits~~
 - JSON based config files

@@ -94,6 +94,8 @@ async def connection_handler(websocket, path):
 async def request_handler(path, request_headers):
   if "Upgrade" in request_headers:
     return
+  if path.split("?", 1)[0] in ("/health", "/health/"):
+    return 200, [("Content-Type", "text/plain")], b"OK"
   if not static_path:
     if path.endswith("/") or path.endswith("/index.html"):
       return 200, [("Content-Type", "text/html")], default_html.encode()
