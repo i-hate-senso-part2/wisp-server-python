@@ -14,14 +14,17 @@ except ImportError:
   has_subinterpreters = False
 
 try:
-  import uvloop
+  import importlib
+
+  uvloop = importlib.import_module("uvloop")
   event_loop = "uvloop"
 except ImportError:
   try:
-    import winloop
+    winloop = importlib.import_module("winloop")
     event_loop = "winloop"
   except ImportError:
     event_loop = "asyncio"
+    winloop = None
 
 try:
   import pymasque
