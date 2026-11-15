@@ -7,6 +7,9 @@ import socket
 import textwrap
 
 from websockets.server import serve
+from websockets.server import WebSocketServerProtocol
+from websockets.exceptions import InvalidMessage, SecurityError
+from websockets.legacy.http import read_headers, read_line
 
 import wisp
 from wisp.server import connection
@@ -118,6 +121,46 @@ async def request_handler(path, request_headers):
   static_data = await asyncio.to_thread(target_path.read_bytes)
   return 200, response_headers, static_data
 
+class HeadRequestProtocol(WebSocketServerProtocol):
+  async def read_http_request(self):
+    try:
+      request_line = await read_line(self.reader)
+      try:
+        method, raw_path, version = request_line.split(b" ", 2)
+      except ValueError as exc:
+        raise ValueError("invalid HTTP request line") from exc
+      if method not in (b"GET", b"HEAD"):
+        raise ValueError(f"unsupported HTTP method: {method!r}")
+      if version != b"HTTP/1.1":
+        raise ValueError(f"unsupported HTTP version: {version!r}")
+      path = raw_path.decode("ascii", "surrogateescape")
+      headers = await read_headers(self.reader)
+    except asyncio.CancelledError:
+      raise
+    except (EOFError, ValueError, SecurityError) as exc:
+      raise InvalidMessage("did not receive a valid HTTP request") from exc
+
+    if self.debug:
+      self.logger.debug("< %s %s HTTP/1.1", method.decode("ascii"), path)
+      for key, value in headers.raw_items():
+        self.logger.debug("< %s: %s", key, value)
+
+    self.path = path
+    self.request_headers = headers
+    self.request_method = method.decode("ascii")
+    return path, headers
+
+  async def process_request(self, path, request_headers):
+    response = await super().process_request(path, request_headers)
+    if self.request_method != "HEAD" or response is None:
+      return response
+
+    status, headers, body = response
+    response_headers = list(headers)
+    if not any(name.lower() == "content-length" for name, _ in response_headers):
+      response_headers.append(("Content-Length", str(len(body))))
+    return status, response_headers, b""
+
 async def main(args):
   global static_path
 
@@ -164,6 +207,7 @@ async def main(args):
   async with serve(
     connection_handler, args.host, int(args.port), 
     reuse_port=reuse_port, process_request=request_handler, 
-    compression=None, server_header=server_header
+    compression=None, server_header=server_header,
+    create_protocol=HeadRequestProtocol
   ):
     await asyncio.Future()

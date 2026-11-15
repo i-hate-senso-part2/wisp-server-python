@@ -59,7 +59,7 @@ options:
 ```
 
 ## Health Check:
-The server provides a small HTTP health-check endpoint at `/health`. It responds with status `200` and the text `OK`, so it can be used by cron services that have response-size limits. Configure the cron job to request `https://your-render-service.onrender.com/health`.
+The server provides a small HTTP health-check endpoint at `/health`. It responds with status `200` and the text `OK` to `GET` requests, and supports `HEAD` requests with no response body. Configure the cron job to request `https://your-render-service.onrender.com/health`.
 
 ## Roadmap:
 - ~~Rate limits~~
